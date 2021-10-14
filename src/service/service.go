@@ -2,11 +2,13 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
-	"os"
+	"strings"
 
 	"github.com/aselimkaya/RESTfulKeyValueStore/src/repository"
+	"github.com/aselimkaya/RESTfulKeyValueStore/src/utils"
 )
 
 type Store struct {
@@ -15,18 +17,19 @@ type Store struct {
 }
 
 func New(l *log.Logger, path string) *Store {
+	repository.Init(l, path)
 	return &Store{storeLogger: l, jsonFilePath: path}
 }
 
 func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method == http.MethodGet {
-		//TODO: Add HTTP GET handler
+		s.getEntry(responseWriter, request)
 		return
 	} else if request.Method == http.MethodPost {
-		s.addKeyVal(responseWriter, request)
+		s.addEntry(responseWriter, request)
 		return
 	} else if request.Method == http.MethodDelete {
-		//TODO: Add HTTP DELETE handler
+		utils.FlushFile(s.jsonFilePath)
 		return
 	}
 
@@ -34,7 +37,7 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 	responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 }
 
-func (s *Store) addKeyVal(responseWriter http.ResponseWriter, request *http.Request) {
+func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Request) {
 	s.storeLogger.Println("Received HTTP POST request")
 
 	e := repository.Entry{}
@@ -46,39 +49,42 @@ func (s *Store) addKeyVal(responseWriter http.ResponseWriter, request *http.Requ
 		return
 	}
 
-	if _, ok := repository.KeyValStore[e.Key]; ok {
-		s.storeLogger.Println("Key already exists in the store, value will be updated")
-	}
-
-	repository.AddPair(e.Key, e.Value)
-
-	jsonString, err := json.Marshal(repository.KeyValStore)
-	if err != nil {
-		s.storeLogger.Printf("Map updated but JSON file could not be updated. Error: %v\n", err)
-		return
-	}
-
-	f, err := os.OpenFile(s.jsonFilePath, os.O_TRUNC|os.O_WRONLY, os.FileMode(0666))
-	if err != nil {
-		s.storeLogger.Fatal(err)
-	}
-	defer f.Close()
-
-	_, err = f.Write(jsonString)
-	if err != nil {
-		s.storeLogger.Printf("Map updated but JSON file could not be updated. Error: %v\n", err)
-		return
-	}
-
+	repository.AddEntry(e.Key, e.Value, s.storeLogger)
 	s.storeLogger.Println("Key value pair added successfully!")
+
+	utils.SyncFile(s.jsonFilePath, s.storeLogger, repository.GetStore())
 
 	responseWriter.WriteHeader(http.StatusOK)
 	responseWriter.Header().Set("Content-Type", "application/json")
 	jsonResp, err := json.Marshal(map[string]string{
 		"message": "Key value pair added successfully!",
+		"code":    fmt.Sprint(http.StatusOK),
 	})
 	if err != nil {
 		s.storeLogger.Printf("Error happened in JSON marshal. Err: %s", err)
 	}
 	responseWriter.Write(jsonResp)
+}
+
+func (s *Store) getEntry(responseWriter http.ResponseWriter, request *http.Request) {
+	s.storeLogger.Println("Received HTTP GET request")
+
+	key := request.URL.Query().Get("key")
+
+	if strings.EqualFold(key, "") {
+		http.Error(responseWriter, "An error occurred while processing the data!", http.StatusBadRequest)
+		return
+	}
+
+	entry, err := repository.GetEntry(key)
+	if err != nil {
+		http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+		return
+	}
+
+	err = entry.ConvertToJSON(responseWriter)
+	if err != nil {
+		http.Error(responseWriter, "Parse error!", http.StatusInternalServerError)
+		return
+	}
 }
