@@ -29,7 +29,10 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 		s.addEntry(responseWriter, request)
 		return
 	} else if request.Method == http.MethodDelete {
-		utils.FlushFile(s.jsonFilePath)
+		err := utils.FlushFile(s.jsonFilePath)
+		if err != nil {
+			http.Error(responseWriter, "An error occurred while flushing the JSON file!", http.StatusInternalServerError)
+		}
 		return
 	}
 
@@ -52,7 +55,10 @@ func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Reque
 	repository.AddEntry(e.Key, e.Value, s.storeLogger)
 	s.storeLogger.Println("Key value pair added successfully!")
 
-	utils.SyncFile(s.jsonFilePath, s.storeLogger, repository.GetStore())
+	err = utils.SyncFile(s.jsonFilePath, s.storeLogger, repository.GetStore())
+	if err != nil {
+		s.storeLogger.Println("JSON file could not be synced!")
+	}
 
 	responseWriter.WriteHeader(http.StatusOK)
 	responseWriter.Header().Set("Content-Type", "application/json")
