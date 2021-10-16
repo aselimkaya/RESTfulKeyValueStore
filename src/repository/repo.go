@@ -7,6 +7,8 @@ import (
 	"io/ioutil"
 	"log"
 	"os"
+
+	"github.com/aselimkaya/RESTfulKeyValueStore/src/utils"
 )
 
 var keyValStore map[string]string
@@ -14,10 +16,6 @@ var keyValStore map[string]string
 type Entry struct {
 	Key   string `json:"key"`
 	Value string `json:"value"`
-}
-
-func GetStore() map[string]string {
-	return keyValStore
 }
 
 func Init(l *log.Logger, path string) {
@@ -76,4 +74,13 @@ func GetEntry(key string) (Entry, error) {
 		return Entry{Key: key, Value: val}, nil
 	}
 	return Entry{}, ErrKey
+}
+
+func Sync(filePath string, l *log.Logger) error {
+	return utils.SyncFile(filePath, l, keyValStore)
+}
+
+func Flush(filePath string) error {
+	keyValStore = make(map[string]string)
+	return utils.FlushFile(filePath)
 }

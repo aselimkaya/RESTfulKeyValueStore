@@ -8,7 +8,6 @@ import (
 	"strings"
 
 	"github.com/aselimkaya/RESTfulKeyValueStore/src/repository"
-	"github.com/aselimkaya/RESTfulKeyValueStore/src/utils"
 )
 
 type Store struct {
@@ -29,9 +28,9 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 		s.addEntry(responseWriter, request)
 		return
 	} else if request.Method == http.MethodDelete {
-		err := utils.FlushFile(s.jsonFilePath)
+		err := repository.Flush(s.jsonFilePath)
 		if err != nil {
-			http.Error(responseWriter, "An error occurred while flushing the JSON file!", http.StatusInternalServerError)
+			http.Error(responseWriter, fmt.Sprintf("An error occurred while flushing the JSON file! Error: %s", err.Error()), http.StatusInternalServerError)
 		}
 		return
 	}
@@ -48,14 +47,14 @@ func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Reque
 	err := e.ConvertFromJSON(request.Body)
 
 	if err != nil {
-		http.Error(responseWriter, "An error occurred while processing the data!", http.StatusBadRequest)
+		http.Error(responseWriter, fmt.Sprintf("An error occurred while processing the data! Error: %s", err.Error()), http.StatusBadRequest)
 		return
 	}
 
 	repository.AddEntry(e.Key, e.Value, s.storeLogger)
 	s.storeLogger.Println("Key value pair added successfully!")
 
-	err = utils.SyncFile(s.jsonFilePath, s.storeLogger, repository.GetStore())
+	err = repository.Sync(s.jsonFilePath, s.storeLogger)
 	if err != nil {
 		s.storeLogger.Println("JSON file could not be synced!")
 	}
