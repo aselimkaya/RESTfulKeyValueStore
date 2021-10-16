@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 	"strings"
 
 	"github.com/aselimkaya/RESTfulKeyValueStore/src/repository"
@@ -15,9 +16,14 @@ type Store struct {
 	jsonFilePath string
 }
 
-func New(l *log.Logger, path string) *Store {
-	repository.Init(l, path)
-	return &Store{storeLogger: l, jsonFilePath: path}
+func New(l *log.Logger) *Store {
+	path, err := os.Getwd()
+	if err != nil {
+		l.Fatal(err)
+	}
+	os.Mkdir(path+"/db", 0755)
+	repository.Init(l, path+"/db/entries.json")
+	return &Store{storeLogger: l, jsonFilePath: path + "/db/entries.json"}
 }
 
 func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {

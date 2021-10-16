@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"path/filepath"
 	"syscall"
 	"time"
 
@@ -15,13 +14,8 @@ import (
 
 func main() {
 	storeLogger := log.New(os.Stdout, "key-value-store-api", log.LstdFlags)
-	jsonFilePath, err := filepath.Abs("./db/entries.json")
-	if err != nil {
-		storeLogger.Fatal(err)
-		return
-	}
 
-	handler := service.New(storeLogger, jsonFilePath)
+	handler := service.New(storeLogger)
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", handler)
