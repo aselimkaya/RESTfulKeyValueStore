@@ -15,7 +15,7 @@ import (
 
 func main() {
 	storeLogger := log.New(os.Stdout, "key-value-store-api", log.LstdFlags)
-	jsonFilePath, err := filepath.Abs("./src/db/entries.json")
+	jsonFilePath, err := filepath.Abs("./db/entries.json")
 	if err != nil {
 		storeLogger.Fatal(err)
 		return
