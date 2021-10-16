@@ -1,14 +1,13 @@
-FROM golang:latest
+FROM golang:1.15-alpine as builder
 
-RUN mkdir /build
-WORKDIR /build
+ENV GO111MODULE=on
 
-RUN export GO111MODULE=on
-RUN go get github.com/aselimkaya/RESTfulKeyValueStore/src
-RUN cd /build && git clone https://github.com/aselimkaya/RESTfulKeyValueStore.git
+WORKDIR /app
+COPY . .
 
-RUN cd /build/RESTfulKeyValueStore/src && go build
+RUN go build -o keyval src/main.go
 
-EXPOSE 80
-
-ENTRYPOINT [ "/build/RESTfulKeyValueStore/src/src" ]
+FROM alpine:latest
+WORKDIR /root/
+COPY --from=builder /app/keyval .
+CMD ["./keyval"]
