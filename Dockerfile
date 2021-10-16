@@ -11,4 +11,4 @@ RUN cd /build/RESTfulKeyValueStore/src && go build
 
 EXPOSE 80
 
-ENTRYPOINT [ "/build/RESTfulKeyValueStore/src" ]
+ENTRYPOINT [ "/build/RESTfulKeyValueStore/src/src" ]
