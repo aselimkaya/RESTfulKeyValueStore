@@ -14,8 +14,7 @@ docker run -p 80:80 -tid keyvalstore
 ### Run with 'go run' command
 ```
 git clone https://github.com/aselimkaya/RESTfulKeyValueStore.git
-cd src
-go run main.go
+go run src/main.go
 ```
 
 After successfully running these commands you should see this log in terminal:  ```key-value-store-api Server started successfully at http://localhost:80```
