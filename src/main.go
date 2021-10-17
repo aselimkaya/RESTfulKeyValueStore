@@ -14,8 +14,12 @@ import (
 
 func main() {
 	storeLogger := log.New(os.Stdout, "key-value-store-api", log.LstdFlags)
+	path, err := os.Getwd()
+	if err != nil {
+		storeLogger.Fatal(err)
+	}
 
-	handler := service.New(storeLogger)
+	handler := service.New(storeLogger, path)
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", handler)

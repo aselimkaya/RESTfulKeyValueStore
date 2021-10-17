@@ -16,11 +16,7 @@ type Store struct {
 	jsonFilePath string
 }
 
-func New(l *log.Logger) *Store {
-	path, err := os.Getwd()
-	if err != nil {
-		l.Fatal(err)
-	}
+func New(l *log.Logger, path string) *Store {
 	os.Mkdir(path+"/db", 0755)
 	repository.Init(l, path+"/db/entries.json")
 	return &Store{storeLogger: l, jsonFilePath: path + "/db/entries.json"}
@@ -37,7 +33,7 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 		return
 	} else if strings.EqualFold(request.URL.Path, "/entry") {
 		if request.Method == http.MethodGet {
-			s.getEntry(responseWriter, request)
+			s.GetEntry(responseWriter, request)
 			return
 		} else if request.Method == http.MethodPost {
 			s.addEntry(responseWriter, request)
@@ -93,7 +89,7 @@ func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Reque
 	}
 }
 
-func (s *Store) getEntry(responseWriter http.ResponseWriter, request *http.Request) {
+func (s *Store) GetEntry(responseWriter http.ResponseWriter, request *http.Request) {
 	s.storeLogger.Println("Received HTTP GET request")
 
 	key := request.URL.Query().Get("key")
