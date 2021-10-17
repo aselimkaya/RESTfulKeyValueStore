@@ -2,7 +2,11 @@
 Basic in-memory key value store application.
 
 ## 1) Installation
-You can choose one of the following two ways to run the application:
+You can choose one of the following three ways to run the application:
+
+### Run directly on Heroku
+
+Link : [RESTfulKeyValueStore Heroku App](https://fierce-fortress-49205.herokuapp.com)
 
 ### Run with Docker
 ```
