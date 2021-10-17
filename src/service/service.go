@@ -36,7 +36,7 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 			s.GetEntry(responseWriter, request)
 			return
 		} else if request.Method == http.MethodPost {
-			s.addEntry(responseWriter, request)
+			s.AddEntry(responseWriter, request)
 			return
 		} else if request.Method == http.MethodDelete {
 			err := repository.Flush(s.jsonFilePath)
@@ -55,7 +55,7 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 	s.setResponse(responseWriter, http.StatusNotFound, "Page not found!")
 }
 
-func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Request) {
+func (s *Store) AddEntry(responseWriter http.ResponseWriter, request *http.Request) {
 	s.storeLogger.Println("Received HTTP POST request")
 
 	e := repository.Entry{}

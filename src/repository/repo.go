@@ -18,6 +18,10 @@ type Entry struct {
 	Value string `json:"value"`
 }
 
+func GetStore() map[string]string {
+	return keyValStore
+}
+
 func Init(l *log.Logger, path string) {
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		f, err := os.Create(path)
