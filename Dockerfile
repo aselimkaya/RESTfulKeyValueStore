@@ -2,6 +2,8 @@ FROM golang:1.15-alpine as builder
 
 ENV GO111MODULE=on
 
+ENV PORT=8000
+
 WORKDIR /app
 COPY . .
 
