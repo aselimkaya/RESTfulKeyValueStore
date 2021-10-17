@@ -50,3 +50,11 @@ To completely delete pairs, an HTTP DELETE request must be sent to the server.
 
 ### Server Responses
 * If the store flushed successfully: ```{"message":"JSON file flushed successfully!","status":200```
+
+## 3) Tests
+Tests are using relative path to JSON file. Please make sure running the main.go file inside RESTfulKeyValueStore folder, not src folder.
+
+To run tests, you can execute following commands:
+* Test key value adding: ```go test -timeout 30s -run ^TestPost$ ./src/service```
+* Test key search: ```go test -timeout 30s -run ^TestGet$ ./src/service```
+* Test flush: ```go test -timeout 30s -run ^TestDelete$ ./src/service```
