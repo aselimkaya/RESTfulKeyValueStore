@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,8 +26,10 @@ func main() {
 	serveMux.Handle("/", handler)
 	serveMux.Handle("/entry", handler)
 
+	port := os.Getenv("PORT")
+
 	server := &http.Server{
-		Addr:        ":8000",
+		Addr:        fmt.Sprintf(":%v", port),
 		Handler:     serveMux,
 		IdleTimeout: 120 * time.Second,
 	}
@@ -38,7 +41,7 @@ func main() {
 		}
 	}()
 
-	storeLogger.Println("Server started successfully at http://localhost:8000")
+	storeLogger.Printf("Server started successfully at http://localhost:%v", port)
 
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt)
