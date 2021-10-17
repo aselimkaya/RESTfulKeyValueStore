@@ -26,7 +26,7 @@ func main() {
 	serveMux.Handle("/entry", handler)
 
 	server := &http.Server{
-		Addr:        ":80",
+		Addr:        ":8000",
 		Handler:     serveMux,
 		IdleTimeout: 120 * time.Second,
 	}
@@ -38,7 +38,7 @@ func main() {
 		}
 	}()
 
-	storeLogger.Println("Server started successfully at http://localhost:80")
+	storeLogger.Println("Server started successfully at http://localhost:8000")
 
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt)
