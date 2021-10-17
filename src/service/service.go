@@ -11,17 +11,20 @@ import (
 	"github.com/aselimkaya/RESTfulKeyValueStore/src/repository"
 )
 
+//Store holds server side logger and DB JSON file's path inside.
 type Store struct {
 	storeLogger  *log.Logger
 	jsonFilePath string
 }
 
+//New function first creates required files and folders and returns a new Store object.
 func New(l *log.Logger, path string) *Store {
 	os.Mkdir(path+"/db", 0755)
 	repository.Init(l, path+"/db/entries.json")
 	return &Store{storeLogger: l, jsonFilePath: path + "/db/entries.json"}
 }
 
+//ServeHTTP is main handler that handles every single HTTP request. It supports only GET request for welcome page but GET, POST and DELETE for /entry page
 func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
 	if strings.EqualFold(request.URL.Path, "/") {
 		if request.Method == http.MethodGet {
@@ -55,6 +58,7 @@ func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Requ
 	s.setResponse(responseWriter, http.StatusNotFound, "Page not found!")
 }
 
+//AddEntry is a service function that extracts fields from request body and sends them to repository function
 func (s *Store) AddEntry(responseWriter http.ResponseWriter, request *http.Request) {
 	s.storeLogger.Println("Received HTTP POST request")
 
@@ -89,6 +93,7 @@ func (s *Store) AddEntry(responseWriter http.ResponseWriter, request *http.Reque
 	}
 }
 
+//GetEntry is a service function that extracts the key from request parameters and sends it to repository to find if the key exists
 func (s *Store) GetEntry(responseWriter http.ResponseWriter, request *http.Request) {
 	s.storeLogger.Println("Received HTTP GET request")
 
@@ -110,6 +115,7 @@ func (s *Store) GetEntry(responseWriter http.ResponseWriter, request *http.Reque
 	s.setResponse(responseWriter, http.StatusOK, string(b))
 }
 
+//setResponse is a utility function thet generates HTTP Responses
 func (s *Store) setResponse(responseWriter http.ResponseWriter, status int, message string) http.ResponseWriter {
 	responseWriter.WriteHeader(status)
 	responseWriter.Header().Set("Content-Type", "application/json")

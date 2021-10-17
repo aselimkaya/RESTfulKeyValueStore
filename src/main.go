@@ -26,6 +26,7 @@ func main() {
 	serveMux.Handle("/", handler)
 	serveMux.Handle("/entry", handler)
 
+	//Looking up to environment to find out PORT parameter
 	port, found := os.LookupEnv("PORT")
 	if !found {
 		port = "8000"
@@ -46,6 +47,7 @@ func main() {
 
 	storeLogger.Printf("Server started successfully at http://localhost:%v", port)
 
+	//Interrupt or kill signal handler
 	signalChannel := make(chan os.Signal, 2)
 	signal.Notify(signalChannel, os.Interrupt)
 	signal.Notify(signalChannel, syscall.SIGTERM)

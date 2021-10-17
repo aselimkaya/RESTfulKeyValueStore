@@ -13,6 +13,7 @@ import (
 	"github.com/aselimkaya/RESTfulKeyValueStore/src/repository"
 )
 
+//TestPost simple test for adding key value pairs. In the first part, we assume that the JSON file is empty. In the second part, the given key already inserted in part 1.
 func TestPost(t *testing.T) {
 	t.Run("Post key1 value1", func(t *testing.T) {
 		l := log.New(os.Stdout, "test", log.LstdFlags)
@@ -71,6 +72,7 @@ func TestPost(t *testing.T) {
 	})
 }
 
+//TestGet is simple test function for testing key1's presence. Make sure that adding key1 before.
 func TestGet(t *testing.T) {
 	t.Run("Get key1 value", func(t *testing.T) {
 		l := log.New(os.Stdout, "test", log.LstdFlags)
@@ -94,6 +96,7 @@ func TestGet(t *testing.T) {
 	})
 }
 
+//TestDelete controls if map content cleared after flush
 func TestDelete(t *testing.T) {
 	t.Run("Flush store", func(t *testing.T) {
 		l := log.New(os.Stdout, "test", log.LstdFlags)
