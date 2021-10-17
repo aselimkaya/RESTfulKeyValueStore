@@ -55,16 +55,14 @@ func (e *Entry) ConvertFromJSON(reader io.Reader) error {
 	return decoder.Decode(e)
 }
 
-func (e *Entry) ConvertToJSON(writer io.Writer) error {
-	encoder := json.NewEncoder(writer)
-	return encoder.Encode(e)
-}
-
-func AddEntry(key, value string, l *log.Logger) {
+func AddEntry(key, value string, l *log.Logger) bool {
+	isExists := false
 	if _, ok := keyValStore[key]; ok {
 		l.Println("Key already exists in the store, value will be updated")
+		isExists = true
 	}
 	keyValStore[key] = value
+	return isExists
 }
 
 var ErrKey = fmt.Errorf("key not found")

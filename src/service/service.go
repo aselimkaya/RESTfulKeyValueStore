@@ -27,22 +27,36 @@ func New(l *log.Logger) *Store {
 }
 
 func (s *Store) ServeHTTP(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method == http.MethodGet {
-		s.getEntry(responseWriter, request)
-		return
-	} else if request.Method == http.MethodPost {
-		s.addEntry(responseWriter, request)
-		return
-	} else if request.Method == http.MethodDelete {
-		err := repository.Flush(s.jsonFilePath)
-		if err != nil {
-			http.Error(responseWriter, fmt.Sprintf("An error occurred while flushing the JSON file! Error: %s", err.Error()), http.StatusInternalServerError)
+	if strings.EqualFold(request.URL.Path, "/") {
+		if request.Method == http.MethodGet {
+			s.setResponse(responseWriter, http.StatusOK, "Welcome!")
+			return
 		}
+		//HTTP method not supported
+		s.setResponse(responseWriter, http.StatusBadRequest, "HTTP method not supported!")
 		return
+	} else if strings.EqualFold(request.URL.Path, "/entry") {
+		if request.Method == http.MethodGet {
+			s.getEntry(responseWriter, request)
+			return
+		} else if request.Method == http.MethodPost {
+			s.addEntry(responseWriter, request)
+			return
+		} else if request.Method == http.MethodDelete {
+			err := repository.Flush(s.jsonFilePath)
+			if err != nil {
+				s.setResponse(responseWriter, http.StatusInternalServerError, fmt.Sprintf("An error occurred while flushing the JSON file! Error: %s", err.Error()))
+				return
+			}
+			s.setResponse(responseWriter, http.StatusOK, "JSON file flushed successfully!")
+			return
+		}
+
+		//HTTP method not supported
+		s.setResponse(responseWriter, http.StatusBadRequest, "HTTP method not supported!")
 	}
 
-	//HTTP method not supported
-	responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+	s.setResponse(responseWriter, http.StatusNotFound, "Page not found!")
 }
 
 func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Request) {
@@ -53,28 +67,30 @@ func (s *Store) addEntry(responseWriter http.ResponseWriter, request *http.Reque
 	err := e.ConvertFromJSON(request.Body)
 
 	if err != nil {
-		http.Error(responseWriter, fmt.Sprintf("An error occurred while processing the data! Error: %s", err.Error()), http.StatusBadRequest)
+		s.setResponse(responseWriter, http.StatusBadRequest, fmt.Sprintf("An error occurred while processing the data! Error: %s", err.Error()))
 		return
 	}
 
-	repository.AddEntry(e.Key, e.Value, s.storeLogger)
-	s.storeLogger.Println("Key value pair added successfully!")
+	if len(e.Key) == 0 {
+		s.setResponse(responseWriter, http.StatusBadRequest, `Missing field! 'key' field is required!`)
+		return
+	} else if len(e.Value) == 0 {
+		s.setResponse(responseWriter, http.StatusBadRequest, `Missing field! 'value' field is required!`)
+		return
+	}
+
+	isExists := repository.AddEntry(e.Key, e.Value, s.storeLogger)
+	if isExists {
+		s.setResponse(responseWriter, http.StatusOK, "Key already exists, value will be upated")
+	} else {
+		s.setResponse(responseWriter, http.StatusOK, "Key value pair added successfully")
+		s.storeLogger.Println("Key value pair added successfully!")
+	}
 
 	err = repository.Sync(s.jsonFilePath, s.storeLogger)
 	if err != nil {
 		s.storeLogger.Println("JSON file could not be synced!")
 	}
-
-	responseWriter.WriteHeader(http.StatusOK)
-	responseWriter.Header().Set("Content-Type", "application/json")
-	jsonResp, err := json.Marshal(map[string]string{
-		"message": "Key value pair added successfully!",
-		"code":    fmt.Sprint(http.StatusOK),
-	})
-	if err != nil {
-		s.storeLogger.Printf("Error happened in JSON marshal. Err: %s", err)
-	}
-	responseWriter.Write(jsonResp)
 }
 
 func (s *Store) getEntry(responseWriter http.ResponseWriter, request *http.Request) {
@@ -83,19 +99,32 @@ func (s *Store) getEntry(responseWriter http.ResponseWriter, request *http.Reque
 	key := request.URL.Query().Get("key")
 
 	if strings.EqualFold(key, "") {
-		http.Error(responseWriter, "An error occurred while processing the data!", http.StatusBadRequest)
+		s.setResponse(responseWriter, http.StatusBadRequest, "An error occurred while processing the data!")
 		return
 	}
 
 	entry, err := repository.GetEntry(key)
 	if err != nil {
-		http.Error(responseWriter, err.Error(), http.StatusBadRequest)
+		s.setResponse(responseWriter, http.StatusBadRequest, fmt.Sprintf("An error occurred while processing the data! Error: %s", err.Error()))
 		return
 	}
 
-	err = entry.ConvertToJSON(responseWriter)
+	b, _ := json.Marshal(entry)
+
+	s.setResponse(responseWriter, http.StatusOK, string(b))
+}
+
+func (s *Store) setResponse(responseWriter http.ResponseWriter, status int, message string) http.ResponseWriter {
+	responseWriter.WriteHeader(status)
+	responseWriter.Header().Set("Content-Type", "application/json")
+	jsonResp, err := json.Marshal(map[string]interface{}{
+		"message": message,
+		"status":  status,
+	})
 	if err != nil {
-		http.Error(responseWriter, "Parse error!", http.StatusInternalServerError)
-		return
+		s.storeLogger.Printf("Error happened in JSON marshal. Err: %s", err)
 	}
+	responseWriter.Write(jsonResp)
+
+	return responseWriter
 }

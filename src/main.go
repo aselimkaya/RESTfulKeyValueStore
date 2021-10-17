@@ -19,6 +19,7 @@ func main() {
 
 	serveMux := http.NewServeMux()
 	serveMux.Handle("/", handler)
+	serveMux.Handle("/entry", handler)
 
 	server := &http.Server{
 		Addr:        ":80",
