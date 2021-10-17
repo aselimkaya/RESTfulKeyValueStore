@@ -26,7 +26,10 @@ func main() {
 	serveMux.Handle("/", handler)
 	serveMux.Handle("/entry", handler)
 
-	port := os.Getenv("PORT")
+	port, found := os.LookupEnv("PORT")
+	if !found {
+		port = "8000"
+	}
 
 	server := &http.Server{
 		Addr:        fmt.Sprintf(":%v", port),
