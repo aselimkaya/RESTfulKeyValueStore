@@ -12,7 +12,7 @@ Link : [RESTfulKeyValueStore Heroku App](https://fierce-fortress-49205.herokuapp
 ```
 git clone https://github.com/aselimkaya/RESTfulKeyValueStore.git
 docker build -t keyvalstore .
-docker run -p 80:80 -tid keyvalstore
+docker run -p 8000:8000 -tid keyvalstore
 ```
 
 ### Run with 'go run' command
